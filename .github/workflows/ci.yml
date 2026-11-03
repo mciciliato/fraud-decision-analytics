@@ -9,12 +9,12 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev,notebook]"
@@ -27,12 +27,12 @@ jobs:
           python -c "import json,sys; nb=json.load(open('analyses/incentive-exploitation/incentive_exploitation.ipynb')); sys.exit(any(c.get('outputs') for c in nb['cells'] if c['cell_type']=='code'))"
 
   scans:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Denylist scan
