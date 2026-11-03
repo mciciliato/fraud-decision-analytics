@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev,notebook]"
+      - run: ruff check src tests scripts
+      - run: pytest -q
+      - name: Notebook runs end to end
+        run: jupyter nbconvert --to notebook --execute --output /tmp/executed.ipynb analyses/incentive-exploitation/incentive_exploitation.ipynb
+      - name: Committed notebook has no outputs
+        run: |
+          python -c "import json,sys; nb=json.load(open('analyses/incentive-exploitation/incentive_exploitation.ipynb')); sys.exit(any(c.get('outputs') for c in nb['cells'] if c['cell_type']=='code'))"
+
+  scans:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Denylist scan
+        # The denylist is stored as a repository secret, never in the repo.
+        env:
+          DENYLIST: ${{ secrets.DENYLIST }}
+        run: |
+          if [ -z "$DENYLIST" ]; then echo "DENYLIST secret not set"; exit 1; fi
+          printf '%s\n' "$DENYLIST" > "$RUNNER_TEMP/denylist.txt"
+          python scripts/denylist_scan.py --denylist "$RUNNER_TEMP/denylist.txt"
+      - name: Secrets scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

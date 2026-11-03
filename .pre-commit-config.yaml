@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: denylist-scan
+        name: denylist scan
+        entry: python scripts/denylist_scan.py
+        language: system
+        pass_filenames: false
+        always_run: true
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
